@@ -24,9 +24,11 @@ python3 main.py --prune_type=lt --arch_type=fc1 --dataset=mnist_fgsm_attack --pr
 
 You can modify the parameters based on  [Original LTH code reference](https://github.com/rahulvigneswaran/Lottery-Ticket-Hypothesis-in-Pytorch#readme)
 
-Global numbers to run on experiments:
---prune_percent=10
---prune_iterations=35
+__Global numbers to run on experiments:__
+
+
+--prune_percent=10     
+--prune_iterations=35   
 
 Also make sure to run same experiment with both --prune_type=lt and --prune_type=reinit.
 
