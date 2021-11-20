@@ -129,9 +129,16 @@ dmypy.json
 .pyre/
 
 
-/data
-/dumps
-/plots
-/runs
-/saves
+data/*
+dumps/*
+plots/*
+runs/*
+saves/*
+trained_models/*
 /MNIST
+
+# exception to the rule
+plots/.gitkeep
+runs/.gitkeep
+saves/.gitkeep
+dumps/.gitkeep

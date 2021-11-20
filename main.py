@@ -74,13 +74,13 @@ def main(args, ITE=0):
         attack_dataset = AttackedDataset()
         sample_size = 30000
         AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(sample_size, plot=True,
-                                    plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}")                                 
+                                    plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
         modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np,indices, sample_size)
-        print(len(modified_dataset))
+        #print(len(modified_dataset))
         #modified_dataset_pt = torch.from_numpy(modified_dataset).type(torch.uint8)
         modified_dataset_pt = attack_dataset.full_data_copy()
         modified_dataset_pt.data = torch.from_numpy(modified_dataset).type(torch.uint8)
-        print(modified_dataset_pt.data.size())
+        #print(modified_dataset_pt.data.size())
 
         traindataset = modified_dataset_pt #datasets.MNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.MNIST('../data', train=False, transform=transform)

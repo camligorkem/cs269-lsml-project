@@ -36,10 +36,11 @@ args = parameter_parser() # read argument and creat an argparse object
 
 class AttackedDataset:
 
-    def __init__(self):
+    def __init__(self, device='cpu'):
+        self.device = device
         file_path = './trained_models/MNIST_CNN_epoch_20.pt'
         if not os.path.exists(file_path):
-            trainmodel.train('CNN', 'MNIST', 'cpu', 20)
+            trainmodel.train('CNN', 'MNIST', self.device, 20)
         self.model = Net()
 
         #model.load_state_dict(torch.load(args.destination + args.filename))
@@ -49,7 +50,7 @@ class AttackedDataset:
 
         transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
 
-        self.train_data = datasets.MNIST('./', download = False, train= True, transform=transform)
+        self.train_data = datasets.MNIST('../data', download = True, train= True, transform=transform)
 
 
     def generate_adverserial_examples(self, sample_size, plot=True, plot_path=None ):
@@ -59,14 +60,14 @@ class AttackedDataset:
         """
         indices = torch.randperm(len(self.train_data.data))[:sample_size]
 
-        xx = self.train_data.data[indices].to('cpu')
+        xx = self.train_data.data[indices].to(self.device)
         xx = xx.unsqueeze_(1).float()#/255  # todo recheck
         #print(xx.size())
 
         ## Set Target
-        yy = self.train_data.targets[indices].to('cpu')
+        yy = self.train_data.targets[indices].to(self.device)
 
-        F1 = FGSM(self.model, device = "cpu")       ### or cpu
+        F1 = FGSM(self.model, device = self.device)       ### or cpu
         AdvExArray = F1.generate(xx, yy, **attack_params['FGSM_MNIST'])
 
         predict0 = self.model(xx)
@@ -111,16 +112,16 @@ class AttackedDataset:
           axarr[0,i].imshow(xx[i,0]*255,cmap='gray',vmin=0,vmax=255)
           axarr[1,i].imshow(AdvExArray_np[i,0]*255,cmap='gray',vmin=0,vmax=255)
         #plt.show()
-        utils.checkdir(plot_path.split('/')[:-1])
-        plt.savefig(plot_path+"_attacked_samples.png", dpi=1200)
+        utils.checkdir(plot_path)
+        plt.savefig(plot_path+"attacked_samples.png", dpi=1200)
         plt.close()
 
 
     def create_adverserial_dataset(self, AdvExArray_np, indices, sample_size):
         full_data = self.train_data.data
-        print(full_data.size())
+        #print(full_data.size())
         full_data_np = full_data.numpy()
-        print(full_data_np.dtype)
+        #print(full_data_np.dtype)
         #full_data_np
 
         AdvExArray_np_cp = AdvExArray_np.copy()
@@ -130,8 +131,8 @@ class AttackedDataset:
 
         full_data_np[indices] = reshaped3
 
-        print(full_data_np[indices])
-        print(full_data_np.dtype)
+        #print(full_data_np[indices])
+        #print(full_data_np.dtype)
         np.testing.assert_array_equal(full_data_np[indices],reshaped3)
         return full_data_np
 
@@ -140,7 +141,7 @@ class AttackedDataset:
 
 if __name__ == "__main__":
     attack_dataset = AttackedDataset()
-    sample_size =30000
+    sample_size = 30000
     AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(sample_size, plot=True)
     modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np, indices, sample_size)
     print(len(modified_dataset))
