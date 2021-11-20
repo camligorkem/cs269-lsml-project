@@ -18,6 +18,8 @@ import torchvision.utils as vutils
 import seaborn as sns
 import torch.nn.init as init
 import pickle
+#from torch.utils.data.sampler import SubsetRandomSampler
+from test_fgsm import AttackedDataset
 
 # Custom Libraries
 import utils
@@ -35,27 +37,54 @@ def main(args, ITE=0):
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
+    # TODO make sure to do correct normalization for each dataset above is MNIST only.
+
     if args.dataset == "mnist":
         traindataset = datasets.MNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
+        '''
+        print(type(traindataset.data))
+        print(len(traindataset))
+        print(traindataset.data.size())
+        print(traindataset.data.dtype)
+        print(traindataset.targets[0])
+        print(type(testdataset))
+        print(len(testdataset))
+        print(testdataset.targets[0])
+        '''
         from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet
 
     elif args.dataset == "cifar10":
         traindataset = datasets.CIFAR10('../data', train=True, download=True,transform=transform)
-        testdataset = datasets.CIFAR10('../data', train=False, transform=transform)      
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet, densenet 
+        testdataset = datasets.CIFAR10('../data', train=False, transform=transform)
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet, densenet
 
     elif args.dataset == "fashionmnist":
         traindataset = datasets.FashionMNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.FashionMNIST('../data', train=False, transform=transform)
-        from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet 
+        from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet
 
     elif args.dataset == "cifar100":
         traindataset = datasets.CIFAR100('../data', train=True, download=True,transform=transform)
-        testdataset = datasets.CIFAR100('../data', train=False, transform=transform)   
-        from archs.cifar100 import AlexNet, fc1, LeNet5, vgg, resnet  
-    
+        testdataset = datasets.CIFAR100('../data', train=False, transform=transform)
+        from archs.cifar100 import AlexNet, fc1, LeNet5, vgg, resnet
+
     # If you want to add extra datasets paste here
+    elif args.dataset == "mnist_fgsm_attack":
+        attack_dataset = AttackedDataset()
+        sample_size = 30000
+        AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(sample_size, plot=True,
+                                    plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
+        modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np,indices, sample_size)
+        #print(len(modified_dataset))
+        #modified_dataset_pt = torch.from_numpy(modified_dataset).type(torch.uint8)
+        modified_dataset_pt = attack_dataset.full_data_copy()
+        modified_dataset_pt.data = torch.from_numpy(modified_dataset).type(torch.uint8)
+        #print(modified_dataset_pt.data.size())
+
+        traindataset = modified_dataset_pt #datasets.MNIST('../data', train=True, download=True,transform=transform)
+        testdataset = datasets.MNIST('../data', train=False, transform=transform)
+        from archs.mnist_fgsm_attack import fc1
 
     else:
         print("\nWrong Dataset choice \n")
@@ -64,7 +93,7 @@ def main(args, ITE=0):
     train_loader = torch.utils.data.DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=0,drop_last=False)
     #train_loader = cycle(train_loader)
     test_loader = torch.utils.data.DataLoader(testdataset, batch_size=args.batch_size, shuffle=False, num_workers=0,drop_last=True)
-    
+
     # Importing Network Architecture
     global model
     if args.arch_type == "fc1":
@@ -74,11 +103,11 @@ def main(args, ITE=0):
     elif args.arch_type == "alexnet":
         model = AlexNet.AlexNet().to(device)
     elif args.arch_type == "vgg16":
-        model = vgg.vgg16().to(device)  
+        model = vgg.vgg16().to(device)
     elif args.arch_type == "resnet18":
-        model = resnet.resnet18().to(device)   
+        model = resnet.resnet18().to(device)
     elif args.arch_type == "densenet121":
-        model = densenet.densenet121().to(device)   
+        model = densenet.densenet121().to(device)
     # If you want to add extra model paste here
     else:
         print("\nWrong Model choice\n")
@@ -127,11 +156,11 @@ def main(args, ITE=0):
                 #elif args.arch_type == "alexnet":
                 #    model = AlexNet.AlexNet().to(device)
                 #elif args.arch_type == "vgg16":
-                #    model = vgg.vgg16().to(device)  
+                #    model = vgg.vgg16().to(device)
                 #elif args.arch_type == "resnet18":
-                #    model = resnet.resnet18().to(device)   
+                #    model = resnet.resnet18().to(device)
                 #elif args.arch_type == "densenet121":
-                #    model = densenet.densenet121().to(device)   
+                #    model = densenet.densenet121().to(device)
                 #else:
                 #    print("\nWrong Model choice\n")
                 #    exit()
@@ -168,11 +197,11 @@ def main(args, ITE=0):
             loss = train(model, train_loader, optimizer, criterion)
             all_loss[iter_] = loss
             all_accuracy[iter_] = accuracy
-            
+
             # Frequency for Printing Accuracy and Loss
             if iter_ % args.print_freq == 0:
                 pbar.set_description(
-                    f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')       
+                    f'Train Epoch: {iter_}/{args.end_iter} Loss: {loss:.6f} Accuracy: {accuracy:.2f}% Best Accuracy: {best_accuracy:.2f}%')
 
         writer.add_scalar('Accuracy/test', best_accuracy, comp1)
         bestacc[_ite]=best_accuracy
@@ -180,27 +209,27 @@ def main(args, ITE=0):
         # Plotting Loss (Training), Accuracy (Testing), Iteration Curve
         #NOTE Loss is computed for every iteration while Accuracy is computed only for every {args.valid_freq} iterations. Therefore Accuracy saved is constant during the uncomputed iterations.
         #NOTE Normalized the accuracy to [0,100] for ease of plotting.
-        plt.plot(np.arange(1,(args.end_iter)+1), 100*(all_loss - np.min(all_loss))/np.ptp(all_loss).astype(float), c="blue", label="Loss") 
-        plt.plot(np.arange(1,(args.end_iter)+1), all_accuracy, c="red", label="Accuracy") 
-        plt.title(f"Loss Vs Accuracy Vs Iterations ({args.dataset},{args.arch_type})") 
-        plt.xlabel("Iterations") 
-        plt.ylabel("Loss and Accuracy") 
-        plt.legend() 
-        plt.grid(color="gray") 
+        plt.plot(np.arange(1,(args.end_iter)+1), 100*(all_loss - np.min(all_loss))/np.ptp(all_loss).astype(float), c="blue", label="Loss")
+        plt.plot(np.arange(1,(args.end_iter)+1), all_accuracy, c="red", label="Accuracy")
+        plt.title(f"Loss Vs Accuracy Vs Iterations ({args.dataset},{args.arch_type})")
+        plt.xlabel("Iterations")
+        plt.ylabel("Loss and Accuracy")
+        plt.legend()
+        plt.grid(color="gray")
         utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200) 
+        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200)
         plt.close()
 
         # Dump Plot values
         utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
         all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_loss_{comp1}.dat")
         all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_accuracy_{comp1}.dat")
-        
+
         # Dumping mask
         utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
         with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
             pickle.dump(mask, fp)
-        
+
         # Making variables into 0
         best_accuracy = 0
         all_loss = np.zeros(args.end_iter,float)
@@ -213,18 +242,18 @@ def main(args, ITE=0):
 
     # Plotting
     a = np.arange(args.prune_iterations)
-    plt.plot(a, bestacc, c="blue", label="Winning tickets") 
-    plt.title(f"Test Accuracy vs Unpruned Weights Percentage ({args.dataset},{args.arch_type})") 
-    plt.xlabel("Unpruned Weights Percentage") 
-    plt.ylabel("test accuracy") 
-    plt.xticks(a, comp, rotation ="vertical") 
+    plt.plot(a, bestacc, c="blue", label="Winning tickets")
+    plt.title(f"Test Accuracy vs Unpruned Weights Percentage ({args.dataset},{args.arch_type})")
+    plt.xlabel("Unpruned Weights Percentage")
+    plt.ylabel("test accuracy")
+    plt.xticks(a, comp, rotation ="vertical")
     plt.ylim(0,100)
-    plt.legend() 
-    plt.grid(color="gray") 
+    plt.legend()
+    plt.grid(color="gray")
     utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200) 
-    plt.close()                    
-   
+    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200)
+    plt.close()
+
 # Function for Training
 def train(model, train_loader, optimizer, criterion):
     EPS = 1e-6
@@ -284,7 +313,7 @@ def prune_by_percentile(percent, resample=False, reinit=False,**kwargs):
                 # Convert Tensors to numpy and calculate
                 weight_dev = param.device
                 new_mask = np.where(abs(tensor) < percentile_value, 0, mask[step])
-                
+
                 # Apply new weight and mask
                 param.data = torch.from_numpy(tensor * new_mask).to(weight_dev)
                 mask[step] = new_mask
@@ -296,12 +325,12 @@ def make_mask(model):
     global step
     global mask
     step = 0
-    for name, param in model.named_parameters(): 
+    for name, param in model.named_parameters():
         if 'weight' in name:
             step = step + 1
-    mask = [None]* step 
+    mask = [None]* step
     step = 0
-    for name, param in model.named_parameters(): 
+    for name, param in model.named_parameters():
         if 'weight' in name:
             tensor = param.data.cpu().numpy()
             mask[step] = np.ones_like(tensor)
@@ -310,10 +339,10 @@ def make_mask(model):
 
 def original_initialization(mask_temp, initial_state_dict):
     global model
-    
+
     step = 0
-    for name, param in model.named_parameters(): 
-        if "weight" in name: 
+    for name, param in model.named_parameters():
+        if "weight" in name:
             weight_dev = param.device
             param.data = torch.from_numpy(mask_temp[step] * initial_state_dict[name].cpu().numpy()).to(weight_dev)
             step = step + 1
@@ -391,10 +420,10 @@ def weight_init(m):
 
 
 if __name__=="__main__":
-    
+
     #from gooey import Gooey
-    #@Gooey      
-    
+    #@Gooey
+
     # Arguement Parser
     parser = argparse.ArgumentParser()
     parser.add_argument("--lr",default= 1.2e-3, type=float, help="Learning rate")
@@ -411,14 +440,14 @@ if __name__=="__main__":
     parser.add_argument("--prune_percent", default=10, type=int, help="Pruning percent")
     parser.add_argument("--prune_iterations", default=35, type=int, help="Pruning iterations count")
 
-    
+
     args = parser.parse_args()
 
 
-    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   
+    os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
-    
-    
+
+
     #FIXME resample
     resample = False
 
