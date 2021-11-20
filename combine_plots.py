@@ -3,19 +3,20 @@ import seaborn as sns
 import numpy as np
 import os
 from tqdm import tqdm
-
+import utils
 
 DPI = 1200
 prune_iterations = 10 #35
 arch_types = ["fc1"] #, "lenet5", "resnet18"]
 datasets = ["mnist", "mnist_fgsm_attack"] #"fashionmnist", "cifar10", "cifar100"]
-
+attack_rate_strs = ["", "_10"]
 
 for arch_type in tqdm(arch_types):
-    for dataset in tqdm(datasets):
-        d = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}/lt_compression.dat", allow_pickle=True)
-        b = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}/lt_bestaccuracy.dat", allow_pickle=True)
-        c = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}/reinit_bestaccuracy.dat", allow_pickle=True)
+    for ind, dataset in enumerate(tqdm(datasets)):
+        attack_rate_str = attack_rate_strs[i]
+        d = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}{attack_rate_str}/lt_compression.dat", allow_pickle=True)
+        b = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}{attack_rate_str}/lt_bestaccuracy.dat", allow_pickle=True)
+        c = np.load(f"{os.getcwd()}/dumps/lt/{arch_type}/{dataset}{attack_rate_str}/reinit_bestaccuracy.dat", allow_pickle=True)
 
         #plt.clf()
         #sns.set_style('darkgrid')
@@ -31,6 +32,7 @@ for arch_type in tqdm(arch_types):
         plt.legend()
         plt.grid(color="gray")
 
-        plt.savefig(f"{os.getcwd()}/plots/lt/combined_plots/combined_{arch_type}_{dataset}.png", dpi=DPI, bbox_inches='tight')
+        utils.checkdir(f"{os.getcwd()}/plots/lt/combined_plots/")
+        plt.savefig(f"{os.getcwd()}/plots/lt/combined_plots/combined_{arch_type}_{dataset}{attack_rate_str}.png", dpi=DPI, bbox_inches='tight')
         plt.close()
         #print(f"\n combined_{arch_type}_{dataset} plotted!\n")
