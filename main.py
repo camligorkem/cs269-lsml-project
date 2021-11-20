@@ -23,6 +23,7 @@ from test_fgsm import AttackedDataset
 
 # Custom Libraries
 import utils
+import random
 
 # Tensorboard initialization
 writer = SummaryWriter()
@@ -30,10 +31,15 @@ writer = SummaryWriter()
 # Plotting Style
 sns.set_style('darkgrid')
 
+random.seed(10)
+
 # Main
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reinit = True if args.prune_type=="reinit" else False
+
+    is_attacked = False
+    attack_rate_str = ""
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -71,8 +77,12 @@ def main(args, ITE=0):
 
     # If you want to add extra datasets paste here
     elif args.dataset == "mnist_fgsm_attack":
+        is_attacked = True
+        attack_rate = args.attack_rate
+        attack_rate_str = "_"+str(attack_rate)
+
         attack_dataset = AttackedDataset()
-        sample_size = 30000
+        sample_size = 30000 # To Do change later - attack_rate
         AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(sample_size, plot=True,
                                     plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
         modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np,indices, sample_size)
@@ -84,6 +94,8 @@ def main(args, ITE=0):
 
         traindataset = modified_dataset_pt #datasets.MNIST('../data', train=True, download=True,transform=transform)
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
+
+
         from archs.mnist_fgsm_attack import fc1
 
     else:
@@ -217,7 +229,7 @@ def main(args, ITE=0):
         plt.legend()
         plt.grid(color="gray")
         utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200)
+        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200, bbox_inches="tight")
         plt.close()
 
         # Dump Plot values
@@ -251,7 +263,7 @@ def main(args, ITE=0):
     plt.legend()
     plt.grid(color="gray")
     utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200)
+    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200, bbox_inches="tight")
     plt.close()
 
 # Function for Training

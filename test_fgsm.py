@@ -7,6 +7,7 @@ from torchvision import datasets,models,transforms
 from PIL import Image
 import argparse
 import utils
+import random
 
 from deeprobust.image.attack.fgsm import FGSM
 import torchvision.transforms as transforms
@@ -34,10 +35,12 @@ def parameter_parser():
 args = parameter_parser() # read argument and creat an argparse object
 '''
 
+random.seed(10)
+
 class AttackedDataset:
 
-    def __init__(self, device='cpu'):
-        self.device = device
+    def __init__(self):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         file_path = './trained_models/MNIST_CNN_epoch_20.pt'
         if not os.path.exists(file_path):
             trainmodel.train('CNN', 'MNIST', self.device, 20)
@@ -48,7 +51,7 @@ class AttackedDataset:
         self.model.eval()
         print("Finish loading network.")
 
-        transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
+        transform=transforms.Compose([transforms.ToTensor()])
 
         self.train_data = datasets.MNIST('../data', download = True, train= True, transform=transform)
 
@@ -61,7 +64,7 @@ class AttackedDataset:
         indices = torch.randperm(len(self.train_data.data))[:sample_size]
 
         xx = self.train_data.data[indices].to(self.device)
-        xx = xx.unsqueeze_(1).float()#/255  # todo recheck
+        xx = xx.unsqueeze_(1).float()/255  # todo recheck
         #print(xx.size())
 
         ## Set Target
@@ -112,9 +115,15 @@ class AttackedDataset:
           axarr[0,i].imshow(xx[i,0]*255,cmap='gray',vmin=0,vmax=255)
           axarr[1,i].imshow(AdvExArray_np[i,0]*255,cmap='gray',vmin=0,vmax=255)
         #plt.show()
+        plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[]);
+
         utils.checkdir(plot_path)
-        plt.savefig(plot_path+"attacked_samples.png", dpi=1200)
+        f.suptitle('Samples from original MNIST dataset and their attacked versions by FGSM ')
+        axarr[0, 0].set_title('Original Samples')
+        axarr[1, 0].set_title('Samples after FGSM attack')
+        plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
+
 
 
     def create_adverserial_dataset(self, AdvExArray_np, indices, sample_size):
