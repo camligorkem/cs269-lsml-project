@@ -160,11 +160,13 @@ class AttackedDataset:
         attacked_indices = torch.randperm(len(full_attacked_dataset))[:sample_size]
 
         attacked_samples = full_attacked_dataset[attacked_indices]
+        # print(attacked_samples.size())
         attacked_samples = np.reshape(attacked_samples,(sample_size,28,28))
         attacked_samples_torch =  torch.from_numpy(attacked_samples).type(torch.uint8)
 
         full_original_data = self.train_data
-        # print(full_original_data.data.size())
+        #print(full_original_data.data.size())
+        #print(attacked_samples_torch.size())
         full_original_data.data[attacked_indices] = attacked_samples_torch
         torch.equal(full_original_data.data[attacked_indices], attacked_samples_torch)
 
