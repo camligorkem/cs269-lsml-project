@@ -1,6 +1,8 @@
 # cs269-lsml-project
 
 [Original LTH code reference](https://github.com/rahulvigneswaran/Lottery-Ticket-Hypothesis-in-Pytorch)
+
+
 [Adversary examples created using DeepRobust library](https://github.com/DSE-MSU/DeepRobust)
 
 ### Create Environment
@@ -31,7 +33,6 @@ __Global numbers to run on experiments:__
 
 We should set --end_iter is the number of epochs trained in each pruning iteration. We should pick it
 based on our dataset since MNIST might be more quickly overfit than bigger/complex datasets. Don't stick with default since it is 100 and very big for small datasets.
-For MNIST, we can make it around 12.
 
 Also make sure to run same experiment with both --prune_type=lt and --prune_type=reinit.
 

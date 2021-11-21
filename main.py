@@ -23,6 +23,7 @@ from test_fgsm import AttackedDataset
 
 # Custom Libraries
 import utils
+import random
 
 # Tensorboard initialization
 writer = SummaryWriter()
@@ -30,10 +31,15 @@ writer = SummaryWriter()
 # Plotting Style
 sns.set_style('darkgrid')
 
+random.seed(10)
+
 # Main
 def main(args, ITE=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     reinit = True if args.prune_type=="reinit" else False
+
+    # Empty Unless we attacked the dataset
+    attack_rate_str = ""
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
@@ -71,20 +77,19 @@ def main(args, ITE=0):
 
     # If you want to add extra datasets paste here
     elif args.dataset == "mnist_fgsm_attack":
-        attack_dataset = AttackedDataset()
-        sample_size = 30000
-        AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(sample_size, plot=True,
-                                    plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-        modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np,indices, sample_size)
-        #print(len(modified_dataset))
-        #modified_dataset_pt = torch.from_numpy(modified_dataset).type(torch.uint8)
-        modified_dataset_pt = attack_dataset.full_data_copy()
-        modified_dataset_pt.data = torch.from_numpy(modified_dataset).type(torch.uint8)
-        #print(modified_dataset_pt.data.size())
+        attack_rate = args.attack_rate # 50% of the train dataset will be attacked
+        attack_rate_str = "_"+str(attack_rate)
 
-        traindataset = modified_dataset_pt #datasets.MNIST('../data', train=True, download=True,transform=transform)
+        attack_dataset = AttackedDataset(attack_rate)
+
+        traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
+                        plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
-        from archs.mnist_fgsm_attack import fc1
+
+        print(traindataset.data.size())
+        print(traindataset.targets.size())
+
+        from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
 
     else:
         print("\nWrong Dataset choice \n")
@@ -118,8 +123,8 @@ def main(args, ITE=0):
 
     # Copying and Saving Initial State
     initial_state_dict = copy.deepcopy(model.state_dict())
-    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/initial_state_dict_{args.prune_type}.pth.tar")
+    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+    torch.save(model, f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}{attack_rate_str}/initial_state_dict_{args.prune_type}.pth.tar")
 
     # Making Initial Mask
     make_mask(model)
@@ -190,8 +195,8 @@ def main(args, ITE=0):
                 # Save Weights
                 if accuracy > best_accuracy:
                     best_accuracy = accuracy
-                    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/")
-                    torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}/{_ite}_model_{args.prune_type}.pth.tar")
+                    utils.checkdir(f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+                    torch.save(model,f"{os.getcwd()}/saves/{args.arch_type}/{args.dataset}{attack_rate_str}/{_ite}_model_{args.prune_type}.pth.tar")
 
             # Training
             loss = train(model, train_loader, optimizer, criterion)
@@ -216,18 +221,18 @@ def main(args, ITE=0):
         plt.ylabel("Loss and Accuracy")
         plt.legend()
         plt.grid(color="gray")
-        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200)
+        utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+        plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_LossVsAccuracy_{comp1}.png", dpi=1200, bbox_inches="tight")
         plt.close()
 
         # Dump Plot values
-        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-        all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_loss_{comp1}.dat")
-        all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_all_accuracy_{comp1}.dat")
+        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+        all_loss.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_all_loss_{comp1}.dat")
+        all_accuracy.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_all_accuracy_{comp1}.dat")
 
         # Dumping mask
-        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-        with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
+        utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+        with open(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_mask_{comp1}.pkl", 'wb') as fp:
             pickle.dump(mask, fp)
 
         # Making variables into 0
@@ -236,9 +241,9 @@ def main(args, ITE=0):
         all_accuracy = np.zeros(args.end_iter,float)
 
     # Dumping Values for Plotting
-    utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/")
-    comp.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_compression.dat")
-    bestacc.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_bestaccuracy.dat")
+    utils.checkdir(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+    comp.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_compression.dat")
+    bestacc.dump(f"{os.getcwd()}/dumps/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_bestaccuracy.dat")
 
     # Plotting
     a = np.arange(args.prune_iterations)
@@ -250,8 +255,8 @@ def main(args, ITE=0):
     plt.ylim(0,100)
     plt.legend()
     plt.grid(color="gray")
-    utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/")
-    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200)
+    utils.checkdir(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+    plt.savefig(f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/{args.prune_type}_AccuracyVsWeights.png", dpi=1200, bbox_inches="tight")
     plt.close()
 
 # Function for Training
@@ -439,6 +444,7 @@ if __name__=="__main__":
     parser.add_argument("--arch_type", default="fc1", type=str, help="fc1 | lenet5 | alexnet | vgg16 | resnet18 | densenet121")
     parser.add_argument("--prune_percent", default=10, type=int, help="Pruning percent")
     parser.add_argument("--prune_iterations", default=35, type=int, help="Pruning iterations count")
+    parser.add_argument("--attack_rate", default=10, type=int, help="Attack rate as percentage")
 
 
     args = parser.parse_args()
