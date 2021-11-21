@@ -8,6 +8,7 @@ from PIL import Image
 import argparse
 import utils
 import random
+from tqdm import tqdm
 
 from deeprobust.image.attack.fgsm import FGSM
 import torchvision.transforms as transforms
@@ -57,6 +58,7 @@ class AttackedDataset:
         yy = self.train_data.targets[indices].to(self.device)
 
         F1 = FGSM(self.model, device = self.device)       ### or cpu
+
         AdvExArray = F1.generate(xx, yy, **attack_params['FGSM_MNIST'])
 
         predict0 = self.model(xx)
@@ -79,6 +81,51 @@ class AttackedDataset:
 
         return AdvExArray_np, indices
 
+    def generate_full_adverserial_dataset(self, plot=False, plot_path="" ):
+
+        """
+        Generate full adversarial dataset
+        """
+
+        xx = self.train_data.data.to(self.device)
+        xx = xx.unsqueeze_(1).float()/255
+        # print(xx.size())
+
+        ## Set Target
+        yy = self.train_data.targets.to(self.device)
+
+        F1 = FGSM(self.model, device = self.device)       ### or cpu
+
+        AdvExArray = xx
+
+        batch_size = 60
+        iter_num = int(len(self.train_data.data)/batch_size)
+        for b in tqdm(range(0, iter_num)):
+            #print(batch_size*b,batch_size*b+(batch_size))
+            small_xx = xx[batch_size*b:batch_size*b+(batch_size)]
+            small_yy = yy[batch_size*b:batch_size*b+(batch_size)]
+            AdvExArray_small = F1.generate(small_xx, small_yy, **attack_params['FGSM_MNIST'])
+            AdvExArray[batch_size*b:batch_size*b+(batch_size)] = AdvExArray_small
+
+        # torch.cuda release cache
+        if self.device == 'cuda':
+            torch.cuda.empty_cache()
+
+        xx = xx.cpu().detach().numpy()
+        AdvExArray_np = AdvExArray.cpu().detach().numpy()
+        utils.checkdir("../data/MNIST_fsm_attack/")
+
+        # save attacked dataset
+        np.savez_compressed('../data/MNIST_fsm_attack/attacked_train_data.npz', data=AdvExArray_np)
+
+        loaded = np.load('../data/MNIST_fsm_attack/attacked_train_data.npz')
+        assert(np.array_equal(AdvExArray_np, loaded['data']))
+
+        if plot:
+            indices = torch.randperm(len(self.train_data.data))[:10]
+            self.plot_adverserial_examples(xx[indices], AdvExArray_np[indices], plot_path)
+
+
     def plot_adverserial_examples(self, xx, AdvExArray_np, plot_path):
         plt.figure()
         #subplot(r,c) provide the no. of rows and columns
@@ -98,35 +145,38 @@ class AttackedDataset:
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
 
-    def create_adverserial_dataset(self, AdvExArray_np, indices):
-        full_data = self.train_data.data
-        #print(full_data.size())
-        full_data_np = full_data.numpy()
-        #print(full_data_np.dtype)
+    def create_partial_adverserial_dataset(self, attack_rate):
+        attacked_dataset_path = '../data/MNIST_fsm_attack/attacked_train_data.npz'
+        if not os.path.exists(attacked_dataset_path):
+            # create attacked dataset
+            self.generate_full_adverserial_dataset(plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/deneme/")
 
-        AdvExArray_np_cp = AdvExArray_np.copy()
-        AdvExArray_np_cp = np.reshape(AdvExArray_np_cp,(self.sample_size,28,28))
-        #AdvExArray_np_cp *=255
-        reshaped3= (AdvExArray_np_cp).astype(np.uint8)
+        # read from created attacked dataset
+        loaded = np.load(attacked_dataset_path)
+        full_attacked_dataset = loaded['data']
 
-        full_data_np[indices] = reshaped3
+        # get samples from attacked datasets
+        sample_size = round(len(full_attacked_dataset)*attack_rate/100)
+        attacked_indices = torch.randperm(len(full_attacked_dataset))[:sample_size]
 
-        #print(full_data_np[indices])
-        #print(full_data_np.dtype)
-        np.testing.assert_array_equal(full_data_np[indices],reshaped3)
-        return full_data_np
+        attacked_samples = full_attacked_dataset[attacked_indices]
+        attacked_samples = np.reshape(attacked_samples,(sample_size,28,28))
+        attacked_samples_torch =  torch.from_numpy(attacked_samples).type(torch.uint8)
 
-    def full_data_copy(self):
-        return self.train_data#.copy()
+        full_original_data = self.train_data
+        # print(full_original_data.data.size())
+        full_original_data.data[attacked_indices] = attacked_samples_torch
+        torch.equal(full_original_data.data[attacked_indices], attacked_samples_torch)
+
+        return full_original_data
+
 
 if __name__ == "__main__":
     attack_rate = 50 # 50% of the train dataset will be attacked
     attack_dataset = AttackedDataset(attack_rate)
 
-    AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(plot=True)
-    modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np, indices)
-    print(len(modified_dataset))
-    modified_dataset_pt = attack_dataset.full_data_copy()
-    modified_dataset_pt.data = torch.from_numpy(modified_dataset).type(torch.uint8)
-    print(modified_dataset_pt.data.size())
-    print(modified_dataset_pt.targets.size())
+    data = attack_dataset.create_partial_adverserial_dataset(attack_rate)
+    print(len(data))
+    print(data.data.size())
+    print(data.targets.size())
+    print('Done')

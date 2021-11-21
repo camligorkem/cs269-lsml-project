@@ -77,20 +77,16 @@ def main(args, ITE=0):
 
     # If you want to add extra datasets paste here
     elif args.dataset == "mnist_fgsm_attack":
-        attack_rate = args.attack_rate
+        attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
 
-        attack_dataset = AttackedDataset(attack_rate=attack_rate)
-        AdvExArray_np, indices =  attack_dataset.generate_adverserial_examples(plot=True,
-                                    plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
-        modified_dataset = attack_dataset.create_adverserial_dataset(AdvExArray_np,indices)
-        # print(len(modified_dataset))
-        # modified_dataset_pt = torch.from_numpy(modified_dataset).type(torch.uint8)
-        modified_dataset_pt = attack_dataset.full_data_copy()
-        modified_dataset_pt.data = torch.from_numpy(modified_dataset).type(torch.uint8)
+        attack_dataset = AttackedDataset(attack_rate)
 
-        traindataset = modified_dataset_pt
+        traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate)
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
+
+        print(traindataset.data.size())
+        print(traindataset.targets.size())
 
         from archs.mnist_fgsm_attack import fc1
 
