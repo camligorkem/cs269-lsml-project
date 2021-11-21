@@ -89,7 +89,7 @@ def main(args, ITE=0):
         print(traindataset.data.size())
         print(traindataset.targets.size())
 
-        from archs.mnist_fgsm_attack import fc1
+        from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
 
     else:
         print("\nWrong Dataset choice \n")
