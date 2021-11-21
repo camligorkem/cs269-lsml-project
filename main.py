@@ -82,7 +82,8 @@ def main(args, ITE=0):
 
         attack_dataset = AttackedDataset(attack_rate)
 
-        traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate)
+        traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
+                        plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
 
         print(traindataset.data.size())

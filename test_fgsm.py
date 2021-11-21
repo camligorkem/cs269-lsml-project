@@ -145,11 +145,11 @@ class AttackedDataset:
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
 
-    def create_partial_adverserial_dataset(self, attack_rate):
+    def create_partial_adverserial_dataset(self, attack_rate, plot, plot_path):
         attacked_dataset_path = '../data/MNIST_fsm_attack/attacked_train_data.npz'
         if not os.path.exists(attacked_dataset_path):
             # create attacked dataset
-            self.generate_full_adverserial_dataset(plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/deneme/")
+            self.generate_full_adverserial_dataset(plot=plot, plot_path = plot_path)
 
         # read from created attacked dataset
         loaded = np.load(attacked_dataset_path)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     attack_rate = 50 # 50% of the train dataset will be attacked
     attack_dataset = AttackedDataset(attack_rate)
 
-    data = attack_dataset.create_partial_adverserial_dataset(attack_rate)
+    data = attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=False)
     print(len(data))
     print(data.data.size())
     print(data.targets.size())
