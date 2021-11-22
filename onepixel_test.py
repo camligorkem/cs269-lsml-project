@@ -9,6 +9,7 @@ import argparse
 import utils
 import random
 
+from deeprobust.image.netmodels.CNN import Net
 from deeprobust.image.attack.onepixel import Onepixel
 import torchvision.transforms as transforms
 from deeprobust.image.netmodels import resnet
