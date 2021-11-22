@@ -81,9 +81,9 @@ class MNIST_AttackedDataset:
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['FGSM_MNIST'])#.float()
             elif self.attack_type == 'pgd':
                 params = {
-                    'epsilon': 0.2,
-                    'clip_max': None,
-                    'clip_min': None,
+                    'epsilon': 0.1,
+                    'clip_max': 1.0,
+                    'clip_min': 0.0,
                     'print_process': False
                     }
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **params)
