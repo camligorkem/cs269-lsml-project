@@ -29,7 +29,10 @@ class MNIST_AttackedDataset:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         file_path = './trained_models/MNIST_CNN_epoch_20.pt'
         if not os.path.exists(file_path):
-            trainmodel.train('CNN', 'MNIST', self.device, 20)
+            URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/MNIST_CNN_epoch_20.pt"
+            download_model(URL, file_path)
+
+            #trainmodel.train('CNN', 'MNIST', self.device, 20)
         self.model = Net()
 
         #model.load_state_dict(torch.load(args.destination + args.filename))
