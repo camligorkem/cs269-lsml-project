@@ -19,7 +19,7 @@ import random
 import utils
 from tqdm import tqdm
 
-random.seed(10)
+#random.seed(10)
 
 class CIFAR10_AttackDataset:
 
@@ -80,24 +80,23 @@ class CIFAR10_AttackDataset:
         # to do check here!
         #xx, yy = next(iter(self.train_loader))
         sample_size = 50000
-        xx = torch.Tensor(self.train_data.data)#.to(self.device).float()
+        xx = torch.Tensor(self.train_data.data).to(self.device)
+        xx = xx.float()/255
         xx = torch.reshape(xx,(sample_size,3,32,32))
-        xx = xx.to('cpu')#.float()
+        xx = xx.to('cpu').float()
 
         yy = torch.Tensor(self.train_data.targets)
 
-        AdvExArray = xx
+        AdvExArray = torch.clone(xx)
         iter_num = int(len(xx)/self.batch_size)
         for b in tqdm(range(0, iter_num)):
-            #print(batch_size*b,batch_size*b+(batch_size))
             small_xx = xx[self.batch_size*b:self.batch_size*b+(self.batch_size)]
             small_yy = yy[self.batch_size*b:self.batch_size*b+(self.batch_size)]
             if self.attack_type == 'pgd':
-                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['PGD_CIFAR10'])#.float()
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['PGD_CIFAR10']).float()
             else:
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
             AdvExArray[self.batch_size*b:self.batch_size*b+(self.batch_size)] = AdvExArray_small
-
 
         # torch.cuda release cache
         if self.device == 'cuda':
@@ -119,7 +118,6 @@ class CIFAR10_AttackDataset:
         if plot:
             indices = torch.randperm(len(self.train_loader.dataset))[:10]
             self.plot_adverserial_examples(xx[indices], AdvExArray_np[indices], plot_path)
-            #self.plot_adverserial_examples(xx[:10], AdvExArray_np[:10], plot_path)
 
     def plot_adverserial_examples(self, xx, AdvExArray, plot_path='./'):
         plt.figure()
@@ -129,10 +127,13 @@ class CIFAR10_AttackDataset:
         # use the created array to output your multiple images. In this case I have stacked 4 images vertically
         for i in range(10):
             x_show_sample =  np.reshape(xx,(10,32,32,3))[i]
-            axarr[0,i].imshow(x_show_sample/255,vmin=0,vmax=255)
+            x_show_sample = (x_show_sample*255).astype(np.uint8)
+            axarr[0,i].imshow(x_show_sample,vmin=0,vmax=255)
 
             AdvExArray_sample = np.reshape(AdvExArray,(10,32,32,3))[i]
-            axarr[1,i].imshow(AdvExArray_sample/255,vmin=0,vmax=255)
+            AdvExArray_sample = (AdvExArray_sample*255).astype(np.uint8)
+
+            axarr[1,i].imshow(AdvExArray_sample,vmin=0,vmax=255)
 
         #plt.show()
         plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[]);
@@ -143,8 +144,6 @@ class CIFAR10_AttackDataset:
         axarr[1, 0].set_title(f'Samples after {self.attack_type} attack')
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
-        print('saved plottt')
-
 
     def create_partial_adverserial_dataset(self, attack_rate, plot, plot_path='./', recreate=False):
         attacked_dataset_path = f'../data/CIFAR10_{self.attack_type}_attack/attacked_train_data.npz'
