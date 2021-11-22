@@ -140,7 +140,7 @@ class CIFAR10_AttackDataset:
         utils.checkdir(plot_path)
         f.suptitle(f'Samples from original CIFAR10 dataset and their attacked versions by {self.attack_type} ')
         axarr[0, 0].set_title('Original Samples')
-        axarr[1, 0].set_title(f'Samples after {self.attack_typeattack_type} attack')
+        axarr[1, 0].set_title(f'Samples after {self.attack_type} attack')
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
         print('saved plottt')
