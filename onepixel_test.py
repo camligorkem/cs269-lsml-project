@@ -26,7 +26,7 @@ class AttackedDatasetCIFAR10:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         file_path = './trained_models/CIFAR10_ResNet18_epoch_20.pt'
         if not os.path.exists(file_path):
-            trainmodel.train('ResNet18', 'CIFAR10', self.device, 20)
+            URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/CIFAR10_ResNet18_epoch_20.pt"
         self.model = Net()
 
         self.model.load_state_dict(torch.load('./trained_models/' + "CIFAR10_ResNEt18_epoch_20.pt"))
