@@ -19,8 +19,8 @@ import seaborn as sns
 import torch.nn.init as init
 import pickle
 #from torch.utils.data.sampler import SubsetRandomSampler
-from test_fgsm import AttackedDataset
-from test_pgd_all import CIFAR10_AttackDataset
+from mnist_attack_fgsm_pgd import MNIST_AttackedDataset
+from cifar10_attack_fgsm_pgd import CIFAR10_AttackDataset
 
 # Custom Libraries
 import utils
@@ -88,7 +88,7 @@ def main(args, ITE=0):
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
         attack_type = 'fgsm'
-        attack_dataset = AttackedDataset(attack_rate,attack_type)
+        attack_dataset = MNIST_AttackedDataset(attack_rate,attack_type)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
                         plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
@@ -103,7 +103,7 @@ def main(args, ITE=0):
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
         attack_type = 'pgd'
-        attack_dataset = AttackedDataset(attack_rate,attack_type)
+        attack_dataset = MNIST_AttackedDataset(attack_rate,attack_type)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
                         plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
