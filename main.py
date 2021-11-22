@@ -43,6 +43,12 @@ def main(args, ITE=0):
 
     # Data Loader
     transform=transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.1307,), (0.3081,))])
+    transform_cifar10= transforms.Compose([
+                #transforms.RandomCrop(32, padding=5),
+                #transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                ])
     # TODO make sure to do correct normalization for each dataset above is MNIST only.
 
     if args.dataset == "mnist":
@@ -61,9 +67,10 @@ def main(args, ITE=0):
         from archs.mnist import AlexNet, LeNet5, fc1, vgg, resnet
 
     elif args.dataset == "cifar10":
-        traindataset = datasets.CIFAR10('../data', train=True, download=True,transform=transform)
-        testdataset = datasets.CIFAR10('../data', train=False, transform=transform)
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet, densenet
+        traindataset = datasets.CIFAR10('../data', train=True, download=True,transform=transform_cifar10)
+        testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        import deeprobust.image.netmodels.resnet as resnet
 
     elif args.dataset == "fashionmnist":
         traindataset = datasets.FashionMNIST('../data', train=True, download=True,transform=transform)
@@ -79,7 +86,6 @@ def main(args, ITE=0):
     elif args.dataset == "mnist_fgsm_attack":
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
-
         attack_dataset = AttackedDataset(attack_rate)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
@@ -90,6 +96,8 @@ def main(args, ITE=0):
         print(traindataset.targets.size())
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
+
+
 
     else:
         print("\nWrong Dataset choice \n")
@@ -110,7 +118,10 @@ def main(args, ITE=0):
     elif args.arch_type == "vgg16":
         model = vgg.vgg16().to(device)
     elif args.arch_type == "resnet18":
-        model = resnet.resnet18().to(device)
+        if args.dataset == 'cifar10':
+            model = resnet.ResNet18().to(device)
+        else:
+            model = resnet.resnet18().to(device)
     elif args.arch_type == "densenet121":
         model = densenet.densenet121().to(device)
     # If you want to add extra model paste here
@@ -130,7 +141,11 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+    if args.dataset == 'cifar10':
+        optimizer = torch.optim.SGD(model.parameters(), lr= 0.1, momentum=0.5)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+
     criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
 
     # Layer Looper

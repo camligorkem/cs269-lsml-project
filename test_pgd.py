@@ -52,7 +52,7 @@ transform_val = transforms.Compose([
 test_loader  = torch.utils.data.DataLoader(
                 datasets.CIFAR10('../data', train = False, download=True,
                 transform = transform_val),
-                batch_size = 60, shuffle=True) #, **kwargs)
+                batch_size = 2, shuffle=True) #, **kwargs)
 
 
 classes = np.array(('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'))
@@ -75,19 +75,23 @@ print('predict_orig',classes[predict0.cpu()])
 print('predict_adv',classes[predict1.cpu()])
 
 x_show = xx.cpu().numpy().swapaxes(1,3).swapaxes(1,2)[0]
+print('Size,',x_show.shape)
 # print('xx:', x_show)
 plt.imshow(x_show, vmin = 0, vmax = 255)
-plt.savefig('./adversary_examples/cifar_advexample_orig.png')
+plt.savefig('./cifar_advexample_orig.png')
 # print('x_show', x_show)
 
 
 # print('---------------------')
 AdvExArray = AdvExArray.cpu().detach().numpy()
+print('XX plot print.., ',len(AdvExArray))
+print('XX plot print.., ',AdvExArray.size)
 AdvExArray = AdvExArray.swapaxes(1,3).swapaxes(1,2)[0]
-
+print('yy plot print.., ',len(AdvExArray))
+print('XX plot print.., ',AdvExArray.size)
 # print('Adv', AdvExArray)
 
 # print('----------------------')
 # print(AdvExArray)
 plt.imshow(AdvExArray, vmin = 0, vmax = 255)
-plt.savefig('./adversary_examples/cifar_advexample_pgd.png')
+plt.savefig('./cifar_advexample_pgd.png')
