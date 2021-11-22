@@ -97,7 +97,22 @@ def main(args, ITE=0):
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
 
+    elif args.dataset == "cifar10_pgd_attack":
+        attack_rate = args.attack_rate # 50% of the train dataset will be attacked
+        attack_rate_str = "_"+str(attack_rate)
+        attack_type ='pgd'
+        pgd_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
 
+        traindataset = pgd_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=True,
+                                plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+
+        testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
+
+        print(traindataset.data.size())
+        print(traindataset.targets.size())
+
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        import deeprobust.image.netmodels.resnet as resnet
 
     else:
         print("\nWrong Dataset choice \n")
