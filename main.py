@@ -20,6 +20,7 @@ import torch.nn.init as init
 import pickle
 #from torch.utils.data.sampler import SubsetRandomSampler
 from test_fgsm import AttackedDataset
+from test_pgd_all import CIFAR10_AttackDataset
 
 # Custom Libraries
 import utils
