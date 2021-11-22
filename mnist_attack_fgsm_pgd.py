@@ -67,7 +67,7 @@ class MNIST_AttackedDataset:
         ## Set Target
         yy = self.train_data.targets.to(self.device)
 
-        AdvExArray = xx
+        AdvExArray = torch.clone(xx)
 
         batch_size = 60
         iter_num = int(len(self.train_data.data)/batch_size)
