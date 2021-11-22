@@ -31,7 +31,7 @@ class AttackedDatasetCIFAR10:
             download_model(URL,file_path)
         self.model = Net()
 
-        self.model.load_state_dict(torch.load('./trained_models/' + "CIFAR10_ResNEt18_epoch_20.pt"))
+        self.model.load_state_dict(torch.load('./trained_models/' + "CIFAR10_ResNet18_epoch_20.pt"))
         self.model.eval()
         print("Finish loading network.")
 
