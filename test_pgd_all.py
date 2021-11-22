@@ -25,6 +25,7 @@ class CIFAR10_AttackDataset:
 
 
     def __init__(self, attack_rate, attack_type):
+        self.attack_type = attack_type
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         file_path = './trained_models/CIFAR10_ResNet18_epoch_20.pt'
         if not os.path.exists(file_path):
@@ -50,8 +51,7 @@ class CIFAR10_AttackDataset:
         self.batch_size = 60
         self.train_data = datasets.CIFAR10(root='../data', train=True,
                                         download=True, transform=transform_cifar10)
-        print('xx TYPE',type(self.train_data))
-
+        
         self.train_loader = torch.utils.data.DataLoader(self.train_data,
                                              batch_size = self.batch_size, shuffle=False) #, **kwargs)
         #print(len(self.train_loader))
@@ -104,12 +104,12 @@ class CIFAR10_AttackDataset:
 
         print('full adverserial data len:', len(AdvExArray_np))
 
-        utils.checkdir(f"../data/CIFAR10_{attack_type}_attack/")
+        utils.checkdir(f"../data/CIFAR10_{self.attack_type}_attack/")
 
         # save attacked dataset
-        np.savez_compressed(f'../data/CIFAR10_{attack_type}_attack/attacked_train_data.npz', data=AdvExArray_np)
+        np.savez_compressed(f'../data/CIFAR10_{self.attack_type}_attack/attacked_train_data.npz', data=AdvExArray_np)
 
-        loaded = np.load(f'../data/CIFAR10_{attack_type}_attack/attacked_train_data.npz')
+        loaded = np.load(f'../data/CIFAR10_{self.attack_type}_attack/attacked_train_data.npz')
         assert(np.array_equal(AdvExArray_np, loaded['data']))
 
         if plot:
@@ -134,16 +134,16 @@ class CIFAR10_AttackDataset:
         plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[]);
 
         utils.checkdir(plot_path)
-        f.suptitle('Samples from original CIFAR10 dataset and their attacked versions by PGD ')
+        f.suptitle(f'Samples from original CIFAR10 dataset and their attacked versions by {self.attack_type} ')
         axarr[0, 0].set_title('Original Samples')
-        axarr[1, 0].set_title(f'Samples after {attack_type} attack')
+        axarr[1, 0].set_title(f'Samples after {self.attack_typeattack_type} attack')
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
         print('saved plottt')
 
 
     def create_partial_adverserial_dataset(self, attack_rate, plot, plot_path='./', recreate=False):
-        attacked_dataset_path = f'../data/CIFAR10_{attack_type}_attack/attacked_train_data.npz'
+        attacked_dataset_path = f'../data/CIFAR10_{self.attack_type}_attack/attacked_train_data.npz'
         if (not os.path.exists(attacked_dataset_path)) or recreate:
             # create attacked dataset
             self.generate_full_adverserial_dataset(plot=plot, plot_path = plot_path)
