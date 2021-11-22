@@ -76,7 +76,7 @@ class AttackedDataset:
             small_xx = xx[batch_size*b:batch_size*b+(batch_size)]
             small_yy = yy[batch_size*b:batch_size*b+(batch_size)]
             if self.attack_type == 'fgsm':
-                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy **attack_params['FGSM_MNIST'])#.float()
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['FGSM_MNIST'])#.float()
             else:
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
 
