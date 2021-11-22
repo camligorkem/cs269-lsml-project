@@ -69,7 +69,7 @@ class CIFAR10_AttackDataset:
         elif attack_type == 'pgd':
             self.adversary_model = PGD(self.model, device = self.device)
         else:
-            print("\nWrong Dataset choice \n")
+            print("\nWrong attack choice \n")
             exit()
 
     def generate_full_adverserial_dataset(self, plot=False, plot_path="./" ):
@@ -121,7 +121,7 @@ class CIFAR10_AttackDataset:
             self.plot_adverserial_examples(xx[indices], AdvExArray_np[indices], plot_path)
             #self.plot_adverserial_examples(xx[:10], AdvExArray_np[:10], plot_path)
 
-    def plot_adverserial_examples(self, xx, AdvExArray, plot_path=''):
+    def plot_adverserial_examples(self, xx, AdvExArray, plot_path='./'):
         plt.figure()
         #subplot(r,c) provide the no. of rows and columns
         f, axarr = plt.subplots(2,10, figsize=(20,5))

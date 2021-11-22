@@ -87,7 +87,8 @@ def main(args, ITE=0):
     elif args.dataset == "mnist_fgsm_attack":
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
-        attack_dataset = AttackedDataset(attack_rate)
+        attack_type = 'fgsm'
+        attack_dataset = AttackedDataset(attack_rate,attack_type)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
                         plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
@@ -97,6 +98,22 @@ def main(args, ITE=0):
         print(traindataset.targets.size())
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
+
+    elif args.dataset == "mnist_pgd_attack":
+        attack_rate = args.attack_rate # 50% of the train dataset will be attacked
+        attack_rate_str = "_"+str(attack_rate)
+        attack_type = 'pgd'
+        attack_dataset = AttackedDataset(attack_rate,attack_type)
+
+        traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
+                        plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+        testdataset = datasets.MNIST('../data', train=False, transform=transform)
+
+        print(traindataset.data.size())
+        print(traindataset.targets.size())
+
+        from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
+
 
     elif args.dataset == "cifar10_pgd_attack":
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
@@ -109,8 +126,8 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
-        print(traindataset.data.size())
-        print(traindataset.targets.size())
+        #print(traindataset.data.size())
+        #print(traindataset.targets.size())
 
         from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
         import deeprobust.image.netmodels.resnet as resnet

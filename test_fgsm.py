@@ -11,6 +11,7 @@ import random
 from tqdm import tqdm
 
 from deeprobust.image.attack.fgsm import FGSM
+from deeprobust.image.attack.pgd import PGD
 import torchvision.transforms as transforms
 from deeprobust.image.netmodels.CNN import Net
 from deeprobust.image.config import attack_params
@@ -23,7 +24,8 @@ random.seed(10)
 
 class AttackedDataset:
 
-    def __init__(self, attack_rate):
+    def __init__(self, attack_rate, attack_type):
+        self.attack_type= attack_type
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         file_path = './trained_models/MNIST_CNN_epoch_20.pt'
         if not os.path.exists(file_path):
@@ -33,6 +35,7 @@ class AttackedDataset:
         #model.load_state_dict(torch.load(args.destination + args.filename))
         self.model.load_state_dict(torch.load('./trained_models/' + "MNIST_CNN_epoch_20.pt"))
         self.model.eval()
+        self.get_configs(attack_type)
         print("Finish loading network.")
 
         transform=transforms.Compose([transforms.ToTensor()])
@@ -41,45 +44,15 @@ class AttackedDataset:
         self.attack_rate = attack_rate
         self.sample_size = round(len(self.train_data.data)*attack_rate/100)
 
+    def get_configs(self, attack_type):
+        if attack_type =='fgsm':
+            self.adversary_model = FGSM(self.model, device = self.device)
 
-    def generate_adverserial_examples(self, plot=True, plot_path=None ):
-
-        """
-        Generate adversarial examples
-        """
-
-        indices = torch.randperm(len(self.train_data.data))[:self.sample_size]
-
-        xx = self.train_data.data[indices].to(self.device)
-        xx = xx.unsqueeze_(1).float()/255
-        #print(xx.size())
-
-        ## Set Target
-        yy = self.train_data.targets[indices].to(self.device)
-
-        F1 = FGSM(self.model, device = self.device)       ### or cpu
-
-        AdvExArray = F1.generate(xx, yy, **attack_params['FGSM_MNIST'])
-
-        predict0 = self.model(xx)
-        predict0= predict0.argmax(dim=1, keepdim=True)
-
-        predict1 = self.model(AdvExArray)
-        predict1= predict1.argmax(dim=1, keepdim=True)
-
-        print("original prediction:")
-        print(predict0)
-
-        print("attack prediction:")
-        print(predict1)
-
-        xx = xx.cpu().detach().numpy()
-        AdvExArray_np = AdvExArray.cpu().detach().numpy()
-
-        if plot:
-            self.plot_adverserial_examples(xx, AdvExArray_np, plot_path)
-
-        return AdvExArray_np, indices
+        elif attack_type == 'pgd':
+            self.adversary_model = PGD(self.model, device = self.device)
+        else:
+            print("\nWrong attack choice \n")
+            exit()
 
     def generate_full_adverserial_dataset(self, plot=False, plot_path="" ):
 
@@ -94,8 +67,6 @@ class AttackedDataset:
         ## Set Target
         yy = self.train_data.targets.to(self.device)
 
-        F1 = FGSM(self.model, device = self.device)       ### or cpu
-
         AdvExArray = xx
 
         batch_size = 60
@@ -104,7 +75,11 @@ class AttackedDataset:
             #print(batch_size*b,batch_size*b+(batch_size))
             small_xx = xx[batch_size*b:batch_size*b+(batch_size)]
             small_yy = yy[batch_size*b:batch_size*b+(batch_size)]
-            AdvExArray_small = F1.generate(small_xx, small_yy, **attack_params['FGSM_MNIST'])
+            if self.attack_type == 'fgsm':
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy **attack_params['FGSM_MNIST'])#.float()
+            else:
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
+
             AdvExArray[batch_size*b:batch_size*b+(batch_size)] = AdvExArray_small
 
         # torch.cuda release cache
@@ -113,12 +88,12 @@ class AttackedDataset:
 
         xx = xx.cpu().detach().numpy()
         AdvExArray_np = AdvExArray.cpu().detach().numpy()
-        utils.checkdir("../data/MNIST_fsm_attack/")
+        utils.checkdir(f"../data/MNIST_{self.attack_type}_attack/")
 
         # save attacked dataset
-        np.savez_compressed('../data/MNIST_fsm_attack/attacked_train_data.npz', data=AdvExArray_np)
+        np.savez_compressed(f'../data/MNIST_{self.attack_type}_attack/attacked_train_data.npz', data=AdvExArray_np)
 
-        loaded = np.load('../data/MNIST_fsm_attack/attacked_train_data.npz')
+        loaded = np.load(f'../data/MNIST_{self.attack_type}_attack/attacked_train_data.npz')
         assert(np.array_equal(AdvExArray_np, loaded['data']))
 
         if plot:
@@ -139,14 +114,14 @@ class AttackedDataset:
         plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[]);
 
         utils.checkdir(plot_path)
-        f.suptitle('Samples from original MNIST dataset and their attacked versions by FGSM ')
+        f.suptitle(f'Samples from original MNIST dataset and their attacked versions by {self.attack_type} ')
         axarr[0, 0].set_title('Original Samples')
-        axarr[1, 0].set_title('Samples after FGSM attack')
+        axarr[1, 0].set_title(f'Samples after {self.attack_type} attack')
         plt.savefig(plot_path+"attacked_samples.png", dpi=1200, bbox_inches="tight" )
         plt.close()
 
     def create_partial_adverserial_dataset(self, attack_rate, plot, plot_path):
-        attacked_dataset_path = '../data/MNIST_fsm_attack/attacked_train_data.npz'
+        attacked_dataset_path = f'../data/MNIST_{self.attack_type}_attack/attacked_train_data.npz'
         if not os.path.exists(attacked_dataset_path):
             # create attacked dataset
             self.generate_full_adverserial_dataset(plot=plot, plot_path = plot_path)
@@ -175,7 +150,8 @@ class AttackedDataset:
 
 if __name__ == "__main__":
     attack_rate = 50 # 50% of the train dataset will be attacked
-    attack_dataset = AttackedDataset(attack_rate)
+    attack_type = 'fgsm'
+    attack_dataset = AttackedDataset(attack_rate, attack_type)
 
     data = attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=False)
     print(len(data))
