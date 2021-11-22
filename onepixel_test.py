@@ -28,6 +28,7 @@ class AttackedDatasetCIFAR10:
         file_path = './trained_models/CIFAR10_ResNet18_epoch_20.pt'
         if not os.path.exists(file_path):
             URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/CIFAR10_ResNet18_epoch_20.pt"
+            download_model(URL,file_path)
         self.model = Net()
 
         self.model.load_state_dict(torch.load('./trained_models/' + "CIFAR10_ResNEt18_epoch_20.pt"))
