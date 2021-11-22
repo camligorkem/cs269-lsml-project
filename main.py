@@ -104,7 +104,24 @@ def main(args, ITE=0):
         attack_type ='pgd'
         pgd_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
 
-        traindataset = pgd_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=True,
+        traindataset = pgd_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=False,
+                                plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+
+        testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
+
+        print(traindataset.data.size())
+        print(traindataset.targets.size())
+
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        import deeprobust.image.netmodels.resnet as resnet
+
+    elif args.dataset == "cifar10_fgsm_attack":
+        attack_rate = args.attack_rate # 50% of the train dataset will be attacked
+        attack_rate_str = "_"+str(attack_rate)
+        attack_type ='fgsm'
+        fgsm_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
+
+        traindataset = fgsm_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=False,
                                 plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)

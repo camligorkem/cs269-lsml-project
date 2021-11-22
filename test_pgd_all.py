@@ -25,6 +25,7 @@ class CIFAR10_AttackDataset:
 
 
     def __init__(self, attack_rate, attack_type):
+        print(f'CIFAR10, {attack_type}')
         self.attack_type = attack_type
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         file_path = './trained_models/CIFAR10_ResNet18_epoch_20.pt'
@@ -51,7 +52,7 @@ class CIFAR10_AttackDataset:
         self.batch_size = 60
         self.train_data = datasets.CIFAR10(root='../data', train=True,
                                         download=True, transform=transform_cifar10)
-        
+
         self.train_loader = torch.utils.data.DataLoader(self.train_data,
                                              batch_size = self.batch_size, shuffle=False) #, **kwargs)
         #print(len(self.train_loader))
@@ -91,7 +92,10 @@ class CIFAR10_AttackDataset:
             #print(batch_size*b,batch_size*b+(batch_size))
             small_xx = xx[self.batch_size*b:self.batch_size*b+(self.batch_size)]
             small_yy = yy[self.batch_size*b:self.batch_size*b+(self.batch_size)]
-            AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['PGD_CIFAR10'])#.float()
+            if self.attack_type == 'pgd':
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['PGD_CIFAR10'])#.float()
+            else:
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
             AdvExArray[self.batch_size*b:self.batch_size*b+(self.batch_size)] = AdvExArray_small
 
 
@@ -175,7 +179,7 @@ class CIFAR10_AttackDataset:
 
 if __name__ == "__main__":
     attack_rate = 50 # 50% of the train dataset will be attacked
-    attack_type ='pgd'
+    attack_type = 'fgsm'#'pgd'
     pgd_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
 
     data = pgd_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=True)
