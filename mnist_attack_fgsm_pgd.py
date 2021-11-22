@@ -31,7 +31,6 @@ class MNIST_AttackedDataset:
         if not os.path.exists(file_path):
             URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/MNIST_CNN_epoch_20.pt"
             download_model(URL, file_path)
-
             #trainmodel.train('CNN', 'MNIST', self.device, 20)
         self.model = Net()
 
