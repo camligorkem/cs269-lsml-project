@@ -77,8 +77,17 @@ class MNIST_AttackedDataset:
             small_yy = yy[batch_size*b:batch_size*b+(batch_size)]
             if self.attack_type == 'fgsm':
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['FGSM_MNIST'])#.float()
+            elif self.attack_type == 'pgd':
+                params = {
+                    'epsilon': 0.2,
+                    'clip_max': None,
+                    'clip_min': None,
+                    'print_process': False
+                    }
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **params)
             else:
-                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
+                print("\nWrong attack choice \n")
+                exit()
 
             AdvExArray[batch_size*b:batch_size*b+(batch_size)] = AdvExArray_small
 

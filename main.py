@@ -91,7 +91,7 @@ def main(args, ITE=0):
         attack_dataset = MNIST_AttackedDataset(attack_rate,attack_type)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
-                        plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+                        plot=True, plot_path = f"{os.getcwd()}/plots/attack_samples/{args.dataset}_{attack_type}/")
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
@@ -103,7 +103,7 @@ def main(args, ITE=0):
         attack_dataset = MNIST_AttackedDataset(attack_rate,attack_type)
 
         traindataset = attack_dataset.create_partial_adverserial_dataset(attack_rate,
-                        plot=True, plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+                        plot=True, plot_path = f"{os.getcwd()}/plots/attack_samples/{args.dataset}_{attack_type}/")
         testdataset = datasets.MNIST('../data', train=False, transform=transform)
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
@@ -116,7 +116,7 @@ def main(args, ITE=0):
         pgd_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
 
         traindataset = pgd_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=False,
-                                plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+                                plot_path = f"{os.getcwd()}/plots/attack_samples/{args.dataset}_{attack_type}/")
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
@@ -130,7 +130,7 @@ def main(args, ITE=0):
         fgsm_attack_dataset = CIFAR10_AttackDataset(attack_rate,attack_type)
 
         traindataset = fgsm_attack_dataset.create_partial_adverserial_dataset(attack_rate, plot=True, recreate=False,
-                                plot_path = f"{os.getcwd()}/plots/lt/{args.arch_type}/{args.dataset}{attack_rate_str}/")
+                                plot_path = f"{os.getcwd()}/plots/attack_samples/{args.dataset}_{attack_type}/")
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 

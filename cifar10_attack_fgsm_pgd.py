@@ -93,7 +93,13 @@ class CIFAR10_AttackDataset:
             small_xx = xx[self.batch_size*b:self.batch_size*b+(self.batch_size)]
             small_yy = yy[self.batch_size*b:self.batch_size*b+(self.batch_size)]
             if self.attack_type == 'pgd':
-                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['PGD_CIFAR10']).float()
+                params = {
+                    'epsilon': 0.1,
+                    'clip_max': 1.0,
+                    'clip_min': 0.0,
+                    'print_process': False
+                }
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **params).float()
             else:
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy)
             AdvExArray[self.batch_size*b:self.batch_size*b+(self.batch_size)] = AdvExArray_small
