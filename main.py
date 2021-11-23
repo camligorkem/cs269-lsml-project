@@ -156,7 +156,7 @@ def main(args, ITE=0):
     elif args.arch_type == "vgg16":
         model = vgg.vgg16().to(device)
     elif args.arch_type == "resnet18":
-        if args.dataset == 'cifar10':
+        if args.dataset.contains('cifar10'):
             model = resnet.ResNet18().to(device)
         else:
             model = resnet.resnet18().to(device)
