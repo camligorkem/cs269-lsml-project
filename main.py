@@ -179,10 +179,10 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    #if args.dataset == 'cifar10':
-    #    optimizer = torch.optim.SGD(model.parameters(), lr= 0.1, momentum=0.5)
-    #else:
-    optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+    if 'cifar10' in args.dataset:
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
 
     criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
 
@@ -231,7 +231,10 @@ def main(args, ITE=0):
                 step = 0
             else:
                 original_initialization(mask, initial_state_dict)
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+            if 'cifar10' in args.dataset:
+                optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
+            else:
+                optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
         print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
 
         # Print the table of Nonzeros in each layer
