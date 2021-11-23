@@ -179,10 +179,10 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    if args.dataset == 'cifar10':
-        optimizer = torch.optim.SGD(model.parameters(), lr= 0.1, momentum=0.5)
-    else:
-        optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+    #if args.dataset == 'cifar10':
+    #    optimizer = torch.optim.SGD(model.parameters(), lr= 0.1, momentum=0.5)
+    #else:
+    optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
 
     criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
 
