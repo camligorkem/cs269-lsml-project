@@ -28,6 +28,7 @@ class CIFAR10_AttackDataset:
         print(f'CIFAR10, {attack_type}')
         self.attack_type = attack_type
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        utils.checkdir('./trained_models/')
         file_path = './trained_models/CIFAR10_ResNet18_epoch_20.pt'
         if not os.path.exists(file_path):
             URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/CIFAR10_ResNet18_epoch_20.pt"

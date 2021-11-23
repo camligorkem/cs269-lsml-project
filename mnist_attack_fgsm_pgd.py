@@ -27,6 +27,7 @@ class MNIST_AttackedDataset:
     def __init__(self, attack_rate, attack_type):
         self.attack_type= attack_type
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        utils.checkdir('./trained_models/')
         file_path = './trained_models/MNIST_CNN_epoch_20.pt'
         if not os.path.exists(file_path):
             URL = "https://github.com/I-am-Bot/deeprobust_model/raw/master/MNIST_CNN_epoch_20.pt"
