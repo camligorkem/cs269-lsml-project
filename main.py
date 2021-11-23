@@ -101,7 +101,8 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform)
         
-        from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, resnet
+        import deeprobust.image.netmodels.resnet as resnet
 
     else:
         print("\nWrong Dataset choice \n")
@@ -142,8 +143,10 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
-    criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
+    if 'cifar10' in args.dataset:
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
 
     # Layer Looper
     for name, param in model.named_parameters():
