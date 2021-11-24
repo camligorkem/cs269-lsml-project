@@ -28,12 +28,20 @@ You can modify the parameters based on  [Original LTH code reference](https://gi
 
 __Global numbers to run on experiments:__
 
---prune_percent=10     
---prune_iterations=35   
+We can use the following parameters as fixed in our experiments and set up the remaining:
+__MNIST__
+```
+--end_iter=15  --prune_percent=30 --prune_iterations=15  --batch_size=256 --lr=0.01
+```
+__CIFAR10__
+```
+--end_iter=15  --prune_percent=30 --prune_iterations=15  --batch_size=128 --lr=0.1
+```
 
-We should set --end_iter is the number of epochs trained in each pruning iteration. We should pick it
-based on our dataset since MNIST might be more quickly overfit than bigger/complex datasets. Don't stick with default since it is 100 and very big for small datasets.
-
+Set different values based on the experiment you are running:
+```
+--prune_type --arch_type --dataset --attack_rate
+```
 Also make sure to run same experiment with both --prune_type=lt and --prune_type=reinit.
 
 
