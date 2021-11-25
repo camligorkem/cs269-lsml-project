@@ -179,7 +179,7 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    if 'cifar10' in args.dataset:
+    if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
         optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
     else:
         optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
@@ -231,7 +231,7 @@ def main(args, ITE=0):
                 step = 0
             else:
                 original_initialization(mask, initial_state_dict)
-            if 'cifar10' in args.dataset:
+            if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
                 optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
             else:
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
