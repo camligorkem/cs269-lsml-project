@@ -188,9 +188,9 @@ def main(args, ITE=0):
 
     #if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
     if ('adam' == args.optimizer):
-        optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+        optimizer = torch.optim.Adam(model.parameters(), weight_decay=args.weight_decay)
     else:
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
 
     criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
@@ -242,9 +242,9 @@ def main(args, ITE=0):
                 original_initialization(mask, initial_state_dict)
 
             if args.optimizer == 'adam':
-                optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+                optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
             else:
-                optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+                optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
 
         print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
