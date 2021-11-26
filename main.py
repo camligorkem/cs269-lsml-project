@@ -76,8 +76,9 @@ def main(args, ITE=0):
     elif args.dataset == "cifar10":
         traindataset = datasets.CIFAR10('../data', train=True, download=True,transform=transform_cifar10)
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, densenet #,resnet,  vg
         import deeprobust.image.netmodels.resnet as resnet
+        import deeprobust.image.netmodels.vgg as vgg
 
     elif args.dataset == "fashionmnist":
         traindataset = datasets.FashionMNIST('../data', train=True, download=True,transform=transform)
@@ -126,8 +127,9 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, vgg_2, densenet #,resnet
         import deeprobust.image.netmodels.resnet as resnet
+        import deeprobust.image.netmodels.vgg as vgg
 
     elif args.dataset == "cifar10_fgsm_attack":
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
@@ -140,8 +142,9 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, vgg_2, densenet #,resnet
         import deeprobust.image.netmodels.resnet as resnet
+        import deeprobust.image.netmodels.vgg as vgg
 
     else:
         print("\nWrong Dataset choice \n")
@@ -160,7 +163,8 @@ def main(args, ITE=0):
     elif args.arch_type == "alexnet":
         model = AlexNet.AlexNet().to(device)
     elif args.arch_type == "vgg16":
-        model = vgg.vgg16().to(device)
+        #model = vgg.vgg16().to(device)
+        model = vgg.VGG16().to(device)
     elif args.arch_type == "resnet18":
         if 'cifar10' in args.dataset:
             model = resnet.ResNet18().to(device)
