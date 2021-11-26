@@ -50,6 +50,12 @@ def main(args, ITE=0):
                 transforms.ToTensor(),
                 #transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
                 ])
+    transform_cifar10_alexnet = transforms.Compose([
+                #transforms.Resize(256),
+                #transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
     # TODO make sure to do correct normalization for each dataset above is MNIST only.
 
     if args.dataset == "mnist":
@@ -179,10 +185,13 @@ def main(args, ITE=0):
     make_mask(model)
 
     # Optimizer and Loss
-    if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
-    else:
+
+    #if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
+    if ('adam' == args.optimizer):
         optimizer = torch.optim.Adam(model.parameters(), weight_decay=1e-4)
+    else:
+        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+
 
     criterion = nn.CrossEntropyLoss() # Default was F.nll_loss
 
@@ -231,10 +240,13 @@ def main(args, ITE=0):
                 step = 0
             else:
                 original_initialization(mask, initial_state_dict)
-            if ('cifar10' in args.dataset) and ('resnet18' == args.arch_type):
-                optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.5)
-            else:
+
+            if args.optimizer == 'adam':
                 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+            else:
+                optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+
+
         print(f"\n--- Pruning Level [{ITE}:{_ite}/{ITERATION}]: ---")
 
         # Print the table of Nonzeros in each layer
@@ -501,6 +513,8 @@ if __name__=="__main__":
     parser.add_argument("--prune_percent", default=10, type=int, help="Pruning percent")
     parser.add_argument("--prune_iterations", default=35, type=int, help="Pruning iterations count")
     parser.add_argument("--attack_rate", default=10, type=int, help="Attack rate as percentage")
+    parser.add_argument("--optimizer", default='sgd', type=str, help="Optimizer type")
+    parser.add_argument("--momentum", default=0.5, type=float, help="Momentum")
 
 
     args = parser.parse_args()
