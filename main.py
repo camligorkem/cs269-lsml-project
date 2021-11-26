@@ -164,7 +164,7 @@ def main(args, ITE=0):
         model = AlexNet.AlexNet().to(device)
     elif args.arch_type == "vgg16":
         #model = vgg.vgg16().to(device)
-        model = vgg.VGG16().to(device)
+        model = vgg.VGG('VGG16').to(device)
     elif args.arch_type == "resnet18":
         if 'cifar10' in args.dataset:
             model = resnet.ResNet18().to(device)
