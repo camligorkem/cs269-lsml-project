@@ -515,6 +515,7 @@ if __name__=="__main__":
     parser.add_argument("--attack_rate", default=10, type=int, help="Attack rate as percentage")
     parser.add_argument("--optimizer", default='sgd', type=str, help="Optimizer type")
     parser.add_argument("--momentum", default=0.5, type=float, help="Momentum")
+    parser.add_argument("--weight_decay", default=1e-4, type=float, help="Weight Decay")
 
 
     args = parser.parse_args()
