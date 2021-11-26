@@ -127,7 +127,7 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, vgg_2, densenet #,resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
         import deeprobust.image.netmodels.resnet as resnet
         import deeprobust.image.netmodels.vgg as vgg
 
@@ -142,7 +142,7 @@ def main(args, ITE=0):
 
         testdataset = datasets.CIFAR10('../data', train=False, transform=transform_cifar10)
 
-        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, vgg_2, densenet #,resnet
+        from archs.cifar10 import AlexNet, LeNet5, fc1, vgg, densenet #,resnet
         import deeprobust.image.netmodels.resnet as resnet
         import deeprobust.image.netmodels.vgg as vgg
 
