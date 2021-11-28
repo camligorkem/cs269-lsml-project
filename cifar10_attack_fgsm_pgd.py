@@ -69,6 +69,10 @@ class CIFAR10_AttackDataset:
 
         elif attack_type == 'pgd':
             self.adversary_model = PGD(self.model, device = self.device)
+            
+        elif attack_type == 'onepixel':
+            self.adversary_model = OnePixel(self.model, device = self.device)
+            
         else:
             print("\nWrong attack choice \n")
             exit()
