@@ -69,3 +69,10 @@ write code to read pruned networks and compare against each other, check how muc
 
 5. Different datasets (CIFAR10)
 6. Oneshot pruning vs iterative pruning experiment.
+
+### Final Experiments : (Add additional if present)
+
+ 1. FGSM, PGD and OnePixel attacks
+ 2. MNIST and CIFAR10 datasets
+ 3. ResNet/VGG/FC architectures. 
+
