@@ -94,7 +94,7 @@ class MNIST_AttackedDataset:
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **params)
                 
             elif self.attack_type == 'onepixel':
-                AdvExArray = self.adversary_model.generate(small_xx, small_yy, **attack_params['OnePixel_MNIST'])
+                AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **attack_params['OnePixel_MNIST'])
 
             else:
                 print("\nWrong attack choice \n")
