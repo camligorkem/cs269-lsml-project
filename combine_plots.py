@@ -8,7 +8,7 @@ import utils
 DPI = 1200
 prune_iterations = 10 #35
 arch_types = ["fc1"] #, "lenet5", "resnet18"]
-datasets = ["mnist", "mnist_fgsm_attack"] #"fashionmnist", "cifar10", "cifar100"]
+datasets = ["mnist", "mnist_fgsm_attack","mnist_onepixel_attack"] #"fashionmnist", "cifar10", "cifar100"]
 attack_rate_strs = ["", "_10"]
 
 for arch_type in tqdm(arch_types):
