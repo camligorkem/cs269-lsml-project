@@ -108,7 +108,7 @@ def main(args, ITE=0):
 
         from archs.mnist_fgsm_attack import AlexNet, LeNet5, fc1, vgg, resnet
         
-     elif args.dataset == "mnist_onepixel_attack":
+    elif args.dataset == "mnist_onepixel_attack":
         attack_rate = args.attack_rate # 50% of the train dataset will be attacked
         attack_rate_str = "_"+str(attack_rate)
         attack_type = 'onepixel'
