@@ -55,7 +55,7 @@ class MNIST_AttackedDataset:
         elif attack_type == 'pgd':
             self.adversary_model = PGD(self.model, device = self.device)
             
-        elif attack_type = 'onepixel':
+        elif attack_type == 'onepixel':
             self.adversary_model = Onepixel(self.model, device = self.device)
         else:
             print("\nWrong attack choice \n")
