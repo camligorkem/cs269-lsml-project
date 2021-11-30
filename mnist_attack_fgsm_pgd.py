@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from deeprobust.image.attack.fgsm import FGSM
 from deeprobust.image.attack.pgd import PGD
+from deeprobust.image.attack.onepixel import Onepixel
 import torchvision.transforms as transforms
 from deeprobust.image.netmodels.CNN import Net
 from deeprobust.image.config import attack_params
@@ -53,6 +54,9 @@ class MNIST_AttackedDataset:
 
         elif attack_type == 'pgd':
             self.adversary_model = PGD(self.model, device = self.device)
+            
+        elif attack_type = 'onepixel':
+            self.adversary_model = Onepixel(self.model, device = self.device)
         else:
             print("\nWrong attack choice \n")
             exit()
@@ -88,6 +92,10 @@ class MNIST_AttackedDataset:
                     'print_process': False
                     }
                 AdvExArray_small = self.adversary_model.generate(small_xx, small_yy, **params)
+                
+            elif self.attack_type == 'onepixel':
+                AdvExArray = self.adversary_model.generate(small_xx, small_yy, **attack_params['OnePixel_MNIST'])
+
             else:
                 print("\nWrong attack choice \n")
                 exit()
